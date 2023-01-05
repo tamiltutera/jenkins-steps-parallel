@@ -1,0 +1,55 @@
+pipeline {
+  agent none
+  options {
+    skipDefaultCheckout true
+  }
+  stages {
+    stage('build') {
+      parallel {
+        stage('windows') {
+          agent {label 'windows'}
+          steps {
+            checkout scm
+            powershell '$psversiontable'
+          }
+        }
+        stage('ansible') {
+          agent {label 'ansible'}
+          steps {
+            checkout scm
+            sh 'ansible --version'
+          }
+        }
+        stage('docker') {
+          agent {label 'docker'}
+          steps {
+            checkout scm
+            sh 'docker images'
+          }
+        }
+      }
+    }
+    stage('run') {
+      parallel {
+        stage('windows') {
+          agent {label 'windows'}
+          steps {
+            powershell ' Get-Service | Where-Object { $_.status -eq "Running" }'
+          }
+        }
+        stage('ansible') {
+          agent {label 'ansible'}
+          steps {
+            sh 'ansible -m setup localhost -a "filter=ansible_distribution"'
+          }
+        }
+        stage('docker') {
+          agent {label 'docker'}
+          steps {
+            sh 'docker pull httpd'
+          }
+        }
+      }
+    }
+  }
+}
