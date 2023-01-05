@@ -1,0 +1,74 @@
+pipeline {
+  agent none
+  stages {
+    stage('build and run') {
+      parallel {
+        stage('windows') {
+          agent {label 'windows'}
+          stages {
+            stage('build') {
+              steps {
+                powershell '$psversiontable'
+              }
+            }
+            stage('run') {
+              steps {
+                 powershell ' Get-Service | Where-Object { $_.status -eq "Running" }'
+              }
+            }
+          }
+        }
+        stage('ansible') {
+          agent {label 'ansible'}
+          stages {
+            stage('build') {
+              steps {
+                sh 'ansible --version'
+              }
+            }
+            stage('run') {
+              steps {
+                sh 'ansible -m setup localhost -a "filter=ansible_distribution"'
+              }
+            }
+            stage('unit test') {
+              steps {
+                sh 'echo unit test'
+              }
+            }
+            stage('load test') {
+              steps {
+                sh 'echo load test'
+              }
+            }
+            stage('deploy to storage') {
+              steps {
+                sh 'echo deploy to storage'
+              }
+            }
+          }
+        }      
+        stage('docker') {
+          agent {label 'docker'}
+          stages {
+            stage('build') {
+              steps {
+                sh 'docker --version'
+              }
+            }
+            stage('run') {
+              steps {
+                sh 'docker images'
+              }
+            }
+            stage('unit test') {
+              steps {
+                sh 'docker pull httpd'
+              }
+            }
+          }
+        }      
+      }
+    }
+  }
+}
