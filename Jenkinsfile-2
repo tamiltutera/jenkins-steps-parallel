@@ -24,7 +24,7 @@ pipeline {
           agent {label 'docker'}
           steps {
             checkout scm
-            sh 'docker images'
+            sh 'docker --version'
           }
         }
       }
@@ -46,7 +46,7 @@ pipeline {
         stage('docker') {
           agent {label 'docker'}
           steps {
-            sh 'docker pull httpd'
+            sh 'docker images'
           }
         }
       }
